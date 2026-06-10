@@ -4,6 +4,8 @@ import com.aep2.demo.models.PostagemModel;
 import com.aep2.demo.models.UserModel;
 import com.aep2.demo.repositories.PostagemRepository;
 import com.aep2.demo.services.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/usuario")
+@Tag(name = "Usuários", description = "Endpoints de gerenciamento de usuários")
 public class UserController {
 
     @Autowired
@@ -24,6 +27,7 @@ public class UserController {
     private PostagemRepository postagemRepository;
 
     @PostMapping
+    @Operation(summary = "Cria um novo usuário")
     public ResponseEntity<UserModel> criarUser(@RequestBody UserModel userModel){
         UserModel criado = userService.criarUser(userModel);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -32,27 +36,32 @@ public class UserController {
     }
 
     @GetMapping
+    @Operation(summary = "Lista todos os usuários")
     public ResponseEntity<List<UserModel>> listarTudo(){
         return ResponseEntity.ok().body(userService.findAll());
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Busca um usuário pelo ID")
     public ResponseEntity<Optional<UserModel>> listarPorId(@PathVariable Long id){
         return ResponseEntity.ok().body(userService.findById(id));
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Atualiza os dados de um usuário")
     public ResponseEntity<UserModel> atualizarUser(@PathVariable Long id, @RequestBody UserModel userModel){
         return ResponseEntity.ok().body(userService.updateUser(id, userModel));
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Deleta um usuário pelo ID")
     public ResponseEntity<Void> deletarUser(@PathVariable Long id){
         userService.deletarUser(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/postagens/{titulo}")
+    @Operation(summary = "Busca uma postagem pelo título")
     public ResponseEntity<Optional<PostagemModel>> buscarPorTitulo(@PathVariable String titulo){
         PostagemModel postagem = postagemRepository.findByTitulo(titulo);
         return ResponseEntity.ok().body(Optional.ofNullable(postagem));

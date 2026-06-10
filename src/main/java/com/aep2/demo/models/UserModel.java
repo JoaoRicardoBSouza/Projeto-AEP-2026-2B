@@ -1,6 +1,7 @@
 package com.aep2.demo.models;
 
 import com.aep2.demo.enums.UserEnum;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -52,7 +53,8 @@ public class UserModel {
         this.userEnum = userEnum;
     }
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<PostagemModel> postagens = new ArrayList<>();
 
 }
