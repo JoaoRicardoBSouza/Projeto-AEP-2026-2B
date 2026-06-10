@@ -1,6 +1,8 @@
 package com.aep2.demo.controllers;
 
+import com.aep2.demo.models.PostagemModel;
 import com.aep2.demo.models.UserModel;
+import com.aep2.demo.repositories.PostagemRepository;
 import com.aep2.demo.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,47 +20,41 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private PostagemRepository postagemRepository;
+
     @PostMapping
-    public ResponseEntity<UserModel> criarPostagem(@RequestBody UserModel userModel){
-        UserModel criarPostagem = userService.criarUser(userModel);
-
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(userModel.getId()).toUri();
-
-        return ResponseEntity.created(uri).body(userModel);
+    public ResponseEntity<UserModel> criarUser(@RequestBody UserModel userModel){
+        UserModel criado = userService.criarUser(userModel);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(criado.getId()).toUri();
+        return ResponseEntity.created(uri).body(criado);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping
     public ResponseEntity<List<UserModel>> listarTudo(){
-        List<UserModel> userModelList = userService.findAll();
-
-        return ResponseEntity.ok().body(userModelList);
+        return ResponseEntity.ok().body(userService.findAll());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Optional<UserModel>> listarPorId(@PathVariable Long id){
-        Optional<UserModel> userModelOptional = userService.findById(id);
-
-        return ResponseEntity.ok().body(userModelOptional);
+        return ResponseEntity.ok().body(userService.findById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserModel> atualizarPostagem(@PathVariable Long id, @RequestBody UserModel userModel){
-        UserModel model = userService.updateUser(id, userModel);
-
-        return ResponseEntity.ok().body(model);
+    public ResponseEntity<UserModel> atualizarUser(@PathVariable Long id, @RequestBody UserModel userModel){
+        return ResponseEntity.ok().body(userService.updateUser(id, userModel));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarPostagem(@PathVariable Long id){
+    public ResponseEntity<Void> deletarUser(@PathVariable Long id){
         userService.deletarUser(id);
-
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/postagens/{titulo}")
-    public ResponseEntity<Optional<UserModel>> buscarTitulo(@PathVariable String titulo){
-        UserModel userModel = userService.findByTitulo(titulo);
-
-        return ResponseEntity.ok().body(Optional.ofNullable(userModel));
+    public ResponseEntity<Optional<PostagemModel>> buscarPorTitulo(@PathVariable String titulo){
+        PostagemModel postagem = postagemRepository.findByTitulo(titulo);
+        return ResponseEntity.ok().body(Optional.ofNullable(postagem));
     }
 }

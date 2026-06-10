@@ -1,6 +1,8 @@
 package com.aep2.demo.services;
 
+import com.aep2.demo.models.PostagemModel;
 import com.aep2.demo.models.UserModel;
+import com.aep2.demo.repositories.PostagemRepository;
 import com.aep2.demo.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,8 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private PostagemRepository postagemRepository;
 
 
     public UserModel criarUser(UserModel userModel){
@@ -41,7 +45,7 @@ public class UserService {
         return userRepository.save(model);
     }
 
-    public UserModel findByTitulo(String titulo){
-        return userRepository.findByTitulo(titulo);
+    public PostagemModel findByTitulo(String titulo){
+        return postagemRepository.findByTitulo(titulo);
     }
 }

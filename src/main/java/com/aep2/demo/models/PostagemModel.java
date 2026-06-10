@@ -12,7 +12,7 @@ public class PostagemModel {
     @Id
     @GeneratedValue
     private Long id;
-    private String tituloPostagem;
+    private String titulo;
     private String tipoPostagem;
     private String descricaoPostagem;
 
@@ -28,11 +28,11 @@ public class PostagemModel {
     }
 
     public String getTituloPostagem() {
-        return tituloPostagem;
+        return titulo;
     }
 
     public void setTituloPostagem(String tituloPostagem) {
-        this.tituloPostagem = tituloPostagem;
+        this.titulo = tituloPostagem;
     }
 
     public String getTipoPostagem() {
