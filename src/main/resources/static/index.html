@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AEP 2026 — Painel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+          --bg: #0f1117;
+          --surface: #181c27;
+          --card: #1e2333;
+          --border: #2a2f42;
+          --accent: #6c63ff;
+          --accent2: #a78bfa;
+          --green: #34d399;
+          --red: #f87171;
+          --yellow: #fbbf24;
+          --text: #e8eaf2;
+          --muted: #7c85a2;
+          --radius: 12px;
+          --transition: 0.18s ease;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+          font-family: 'Inter', sans-serif;
+          background: var(--bg);
+          color: var(--text);
+          min-height: 100vh;
+          display: flex;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+          width: 240px;
+          min-height: 100vh;
+          background: var(--surface);
+          border-right: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          padding: 0;
+          position: fixed;
+          top: 0; left: 0; bottom: 0;
+          z-index: 100;
+        }
+
+        .logo {
+          padding: 24px 20px;
+          border-bottom: 1px solid var(--border);
+        }
+        .logo h1 {
+          font-family: 'Sora', sans-serif;
+          font-size: 18px;
+          font-weight: 700;
+          color: var(--text);
+          letter-spacing: -0.3px;
+        }
+        .logo span {
+          font-size: 11px;
+          color: var(--muted);
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        }
+
+        .nav { padding: 16px 12px; flex: 1; }
+        .nav-label {
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 1.2px;
+          text-transform: uppercase;
+          color: var(--muted);
+          padding: 8px 8px 6px;
+        }
+        .nav-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 12px;
+          border-radius: 8px;
+          cursor: pointer;
+          color: var(--muted);
+          font-size: 14px;
+          font-weight: 500;
+          transition: all var(--transition);
+          margin-bottom: 2px;
+          border: none;
+          background: none;
+          width: 100%;
+          text-align: left;
+        }
+        .nav-item:hover { background: var(--card); color: var(--text); }
+        .nav-item.active { background: rgba(108,99,255,0.15); color: var(--accent2); }
+        .nav-item svg { flex-shrink: 0; opacity: 0.8; }
+
+        .sidebar-footer {
+          padding: 16px 20px;
+          border-top: 1px solid var(--border);
+          font-size: 12px;
+          color: var(--muted);
+        }
+        .api-url-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .api-url-input {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          color: var(--text);
+          font-size: 11px;
+          padding: 6px 8px;
+          width: 100%;
+          font-family: monospace;
+        }
+        .api-url-input:focus { outline: none; border-color: var(--accent); }
+
+        /* MAIN */
+        .main {
+          margin-left: 240px;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-height: 100vh;
+        }
+
+        .topbar {
+          background: var(--surface);
+          border-bottom: 1px solid var(--border);
+          padding: 16px 32px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          position: sticky;
+          top: 0;
+          z-index: 50;
+        }
+        .page-title {
+          font-family: 'Sora', sans-serif;
+          font-size: 20px;
+          font-weight: 600;
+        }
+        .topbar-actions { display: flex; gap: 10px; }
+
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 16px;
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all var(--transition);
+          border: none;
+          font-family: 'Inter', sans-serif;
+        }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: #7c74ff; transform: translateY(-1px); }
+        .btn-ghost { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+        .btn-ghost:hover { background: var(--border); }
+        .btn-danger { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+        .btn-danger:hover { background: rgba(248,113,113,0.25); }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+        /* CONTENT */
+        .content { padding: 32px; flex: 1; }
+
+        /* SECTIONS */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* STATS */
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+          margin-bottom: 32px;
+        }
+        .stat-card {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 20px;
+        }
+        .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+        .stat-value { font-size: 32px; font-weight: 700; font-family: 'Sora', sans-serif; }
+
+        /* TABLE */
+        .table-card {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          overflow: hidden;
+        }
+        .table-header {
+          padding: 16px 20px;
+          border-bottom: 1px solid var(--border);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .table-title { font-weight: 600; font-size: 15px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+          padding: 12px 16px;
+          text-align: left;
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          color: var(--muted);
+          background: rgba(255,255,255,0.02);
+          border-bottom: 1px solid var(--border);
+        }
+        tbody tr {
+          border-bottom: 1px solid var(--border);
+          transition: background var(--transition);
+        }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        td { padding: 12px 16px; font-size: 13px; vertical-align: middle; }
+
+        /* BADGES */
+        .badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 3px 9px;
+          border-radius: 20px;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.3px;
+        }
+        .badge-admin { background: rgba(167,139,250,0.15); color: var(--accent2); }
+        .badge-user { background: rgba(52,211,153,0.12); color: var(--green); }
+        .badge-type { background: rgba(251,191,36,0.12); color: var(--yellow); }
+
+        /* ID CHIP */
+        .id-chip {
+          font-family: monospace;
+          font-size: 12px;
+          background: var(--bg);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          padding: 2px 6px;
+          color: var(--muted);
+        }
+
+        /* MODAL */
+        .modal-overlay {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.65);
+          z-index: 200;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(4px);
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          padding: 28px;
+          width: 480px;
+          max-width: 95vw;
+          box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+          animation: modal-in 0.2s ease;
+        }
+        @keyframes modal-in { from { opacity: 0; transform: scale(0.96) translateY(8px); } }
+        .modal-title {
+          font-family: 'Sora', sans-serif;
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 20px;
+        }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+        /* FORM */
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-input, .form-select {
+          width: 100%;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          color: var(--text);
+          font-size: 14px;
+          padding: 10px 12px;
+          font-family: 'Inter', sans-serif;
+          transition: border-color var(--transition);
+        }
+        .form-input:focus, .form-select:focus {
+          outline: none;
+          border-color: var(--accent);
+        }
+        .form-select option { background: var(--card); }
+
+        /* TOAST */
+        #toast-container {
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          z-index: 999;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .toast {
+          padding: 12px 16px;
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          animation: toast-in 0.2s ease;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+          max-width: 320px;
+        }
+        @keyframes toast-in { from { opacity: 0; transform: translateX(20px); } }
+        .toast-success { background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.3); color: var(--green); }
+        .toast-error { background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
+        .toast-info { background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3); color: var(--accent2); }
+
+        /* EMPTY STATE */
+        .empty {
+          text-align: center;
+          padding: 48px 24px;
+          color: var(--muted);
+        }
+        .empty svg { opacity: 0.3; margin-bottom: 12px; }
+        .empty p { font-size: 14px; }
+
+        /* SEARCH BAR */
+        .search-bar {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .search-input-wrap { position: relative; }
+        .search-input {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          color: var(--text);
+          font-size: 13px;
+          padding: 7px 12px 7px 32px;
+          font-family: 'Inter', sans-serif;
+          width: 200px;
+          transition: border-color var(--transition);
+        }
+        .search-input:focus { outline: none; border-color: var(--accent); width: 240px; }
+        .search-icon {
+          position: absolute;
+          left: 9px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--muted);
+        }
+
+        /* LOADING */
+        .spinner {
+          display: inline-block;
+          width: 16px; height: 16px;
+          border: 2px solid var(--border);
+          border-top-color: var(--accent);
+          border-radius: 50%;
+          animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .email-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* DASHBOARD CARDS */
+        .quick-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+          margin-bottom: 24px;
+        }
+        .quick-card {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 20px;
+          cursor: pointer;
+          transition: all var(--transition);
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+        .quick-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .quick-icon {
+          width: 42px; height: 42px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .quick-icon-purple { background: rgba(108,99,255,0.15); }
+        .quick-icon-green { background: rgba(52,211,153,0.12); }
+        .quick-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+        .quick-card p { font-size: 12px; color: var(--muted); }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="logo">
+        <h1>AEP 2026</h1>
+        <span>Painel Administrativo</span>
+    </div>
+    <nav class="nav">
+        <div class="nav-label">Menu</div>
+        <button class="nav-item active" onclick="navigate('dashboard')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Dashboard
+        </button>
+        <button class="nav-item" onclick="navigate('usuarios')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Usuários
+        </button>
+        <button class="nav-item" onclick="navigate('postagens')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Postagens
+        </button>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="api-url-label">API Base URL</div>
+        <input class="api-url-input" id="apiBase" value="http://localhost:8080" oninput="updateBase(this.value)" />
+    </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+    <header class="topbar">
+        <span class="page-title" id="pageTitle">Dashboard</span>
+        <div class="topbar-actions" id="topbarActions"></div>
+    </header>
+
+    <div class="content">
+
+        <!-- DASHBOARD -->
+        <div class="section active" id="section-dashboard">
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-label">Total de Usuários</div>
+                    <div class="stat-value" id="stat-users">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total de Postagens</div>
+                    <div class="stat-value" id="stat-posts">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Admins</div>
+                    <div class="stat-value" id="stat-admins">—</div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <div class="quick-card" onclick="navigate('usuarios'); openModal('modalNovoUser')">
+                    <div class="quick-icon quick-icon-purple">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6c63ff" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                    </div>
+                    <div>
+                        <h3>Novo Usuário</h3>
+                        <p>Cadastrar um novo usuário</p>
+                    </div>
+                </div>
+                <div class="quick-card" onclick="navigate('postagens'); openNovaPostagemModal()">
+                    <div class="quick-icon quick-icon-green">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                    </div>
+                    <div>
+                        <h3>Nova Postagem</h3>
+                        <p>Criar postagem para um usuário</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- USUÁRIOS -->
+        <div class="section" id="section-usuarios">
+            <div class="table-card">
+                <div class="table-header">
+                    <span class="table-title">Usuários</span>
+                    <div class="search-bar">
+                        <div class="search-input-wrap">
+                            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input class="search-input" id="userSearch" placeholder="Filtrar email..." oninput="filterUsers()" />
+                        </div>
+                    </div>
+                </div>
+                <table id="usersTable">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Email</th>
+                        <th>Perfil</th>
+                        <th>Postagens</th>
+                        <th>Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody id="usersTbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- POSTAGENS -->
+        <div class="section" id="section-postagens">
+            <div class="table-card">
+                <div class="table-header">
+                    <span class="table-title">Postagens</span>
+                    <div class="search-bar">
+                        <div class="search-input-wrap">
+                            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input class="search-input" id="postSearch" placeholder="Filtrar título..." oninput="filterPosts()" />
+                        </div>
+                    </div>
+                </div>
+                <table id="postsTable">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Título</th>
+                        <th>Tipo</th>
+                        <th>Descrição</th>
+                        <th>Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody id="postsTbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- MODALS -->
+
+<!-- NOVO USUÁRIO -->
+<div class="modal-overlay" id="modalNovoUser">
+    <div class="modal">
+        <div class="modal-title" id="modalUserTitle">Novo Usuário</div>
+        <input type="hidden" id="editUserId" />
+        <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" id="userEmail" type="email" placeholder="usuario@email.com" />
+        </div>
+        <div class="form-group">
+            <label class="form-label">Senha</label>
+            <input class="form-input" id="userSenha" type="password" placeholder="••••••••" />
+        </div>
+        <div class="form-group">
+            <label class="form-label">Perfil</label>
+            <select class="form-select" id="userPerfil">
+                <option value="USUARIO">Usuário</option>
+                <option value="ADMIN">Admin</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal('modalNovoUser')">Cancelar</button>
+            <button class="btn btn-primary" onclick="salvarUser()">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- NOVA POSTAGEM -->
+<div class="modal-overlay" id="modalNovaPostagem">
+    <div class="modal">
+        <div class="modal-title">Nova Postagem</div>
+        <div class="form-group">
+            <label class="form-label">Usuário</label>
+            <select class="form-select" id="postagemUserId"></select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Título</label>
+            <input class="form-input" id="postagemTitulo" placeholder="Título da postagem" />
+        </div>
+        <div class="form-group">
+            <label class="form-label">Tipo</label>
+            <input class="form-input" id="postagemTipo" placeholder="ex: Artigo, Notícia, Tutorial..." />
+        </div>
+        <div class="form-group">
+            <label class="form-label">Descrição</label>
+            <input class="form-input" id="postagemDesc" placeholder="Descrição da postagem" />
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal('modalNovaPostagem')">Cancelar</button>
+            <button class="btn btn-primary" onclick="salvarPostagem()">Publicar</button>
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="modal-overlay" id="modalConfirmDelete">
+    <div class="modal" style="width:360px">
+        <div class="modal-title">⚠️ Confirmar exclusão</div>
+        <p style="color:var(--muted); font-size:14px; line-height:1.6;" id="deleteMsg">Tem certeza que deseja excluir este item?</p>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal('modalConfirmDelete')">Cancelar</button>
+            <button class="btn btn-danger" id="btnConfirmDelete">Excluir</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<script>
+    let BASE = 'http://localhost:8080';
+    let allUsers = [];
+    let allPosts = [];
+    let currentPage = 'dashboard';
+
+    function updateBase(v) { BASE = v.trim().replace(/\/$/, ''); }
+
+    // ── NAV ──────────────────────────────────────────────────
+    function navigate(page) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+      document.querySelector(`[onclick="navigate('${page}')"]`).classList.add('active');
+      document.getElementById(`section-${page}`).classList.add('active');
+      document.getElementById('pageTitle').textContent = {dashboard:'Dashboard', usuarios:'Usuários', postagens:'Postagens'}[page];
+      currentPage = page;
+      const actions = document.getElementById('topbarActions');
+      actions.innerHTML = '';
+      if (page === 'usuarios') {
+        actions.innerHTML = `<button class="btn btn-primary" onclick="openModal('modalNovoUser'); resetUserForm()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Usuário</button>`;
+        loadUsers();
+      } else if (page === 'postagens') {
+        actions.innerHTML = `<button class="btn btn-primary" onclick="openNovaPostagemModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nova Postagem</button>`;
+        loadPosts();
+      } else if (page === 'dashboard') {
+        loadDashboard();
+      }
+    }
+
+    // ── API ──────────────────────────────────────────────────
+    async function api(path, opts={}) {
+      try {
+        const r = await fetch(BASE + path, {
+          headers: {'Content-Type':'application/json', ...opts.headers},
+          ...opts
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        if (r.status === 204) return null;
+        return r.json();
+      } catch(e) { throw e; }
+    }
+
+    // ── DASHBOARD ─────────────────────────────────────────────
+    async function loadDashboard() {
+      try {
+        const [users, posts] = await Promise.all([
+          api('/usuario').catch(()=>[]),
+          api('/postagens').catch(()=>[])
+        ]);
+        allUsers = users || [];
+        allPosts = posts || [];
+        document.getElementById('stat-users').textContent = allUsers.length;
+        document.getElementById('stat-posts').textContent = allPosts.length;
+        document.getElementById('stat-admins').textContent = allUsers.filter(u => u.userEnum === 'ADMIN').length;
+      } catch(e) { showToast('Não foi possível conectar à API', 'error'); }
+    }
+
+    // ── USERS ─────────────────────────────────────────────────
+    async function loadUsers() {
+      const tbody = document.getElementById('usersTbody');
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:32px; color:var(--muted)"><div class="spinner" style="margin:auto"></div></td></tr>`;
+      try {
+        allUsers = await api('/usuario');
+        renderUsers(allUsers);
+      } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><p>Erro ao conectar: ${e.message}</p></div></td></tr>`;
+        showToast('Erro ao carregar usuários', 'error');
+      }
+    }
+
+    function renderUsers(users) {
+      const tbody = document.getElementById('usersTbody');
+      if (!users.length) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>Nenhum usuário encontrado</p></div></td></tr>`;
+        return;
+      }
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td><span class="id-chip">#${u.id}</span></td>
+          <td><span class="email-cell" title="${u.email||''}">${u.email||'—'}</span></td>
+          <td><span class="badge ${u.userEnum==='ADMIN'?'badge-admin':'badge-user'}">${u.userEnum||'—'}</span></td>
+          <td>${(u.postagens||[]).length}</td>
+          <td style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="editUser(${u.id})">Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmDelete('usuario',${u.id},'Excluir usuário #${u.id}?')">Excluir</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterUsers() {
+      const q = document.getElementById('userSearch').value.toLowerCase();
+      renderUsers(allUsers.filter(u => (u.email||'').toLowerCase().includes(q)));
+    }
+
+    function resetUserForm() {
+      document.getElementById('editUserId').value = '';
+      document.getElementById('modalUserTitle').textContent = 'Novo Usuário';
+      document.getElementById('userEmail').value = '';
+      document.getElementById('userSenha').value = '';
+      document.getElementById('userPerfil').value = 'USUARIO';
+    }
+
+    function editUser(id) {
+      const u = allUsers.find(x => x.id === id);
+      if (!u) return;
+      document.getElementById('editUserId').value = u.id;
+      document.getElementById('modalUserTitle').textContent = `Editar Usuário #${u.id}`;
+      document.getElementById('userEmail').value = u.email || '';
+      document.getElementById('userSenha').value = '';
+      document.getElementById('userPerfil').value = u.userEnum || 'USUARIO';
+      openModal('modalNovoUser');
+    }
+
+    async function salvarUser() {
+      const id = document.getElementById('editUserId').value;
+      const body = {
+        email: document.getElementById('userEmail').value.trim(),
+        senha: document.getElementById('userSenha').value,
+        userEnum: document.getElementById('userPerfil').value
+      };
+      if (!body.email) { showToast('Email obrigatório', 'error'); return; }
+      try {
+        if (id) {
+          await api(`/usuario/${id}`, { method:'PUT', body: JSON.stringify(body) });
+          showToast('Usuário atualizado!', 'success');
+        } else {
+          await api('/usuario', { method:'POST', body: JSON.stringify(body) });
+          showToast('Usuário criado!', 'success');
+        }
+        closeModal('modalNovoUser');
+        loadUsers();
+      } catch(e) { showToast('Erro: ' + e.message, 'error'); }
+    }
+
+    // ── POSTS ─────────────────────────────────────────────────
+    async function loadPosts() {
+      const tbody = document.getElementById('postsTbody');
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:32px; color:var(--muted)"><div class="spinner" style="margin:auto"></div></td></tr>`;
+      try {
+        allPosts = await api('/postagens');
+        renderPosts(allPosts);
+      } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><p>Erro ao conectar: ${e.message}</p></div></td></tr>`;
+        showToast('Erro ao carregar postagens', 'error');
+      }
+    }
+
+    function renderPosts(posts) {
+      const tbody = document.getElementById('postsTbody');
+      if (!posts.length) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>Nenhuma postagem encontrada</p></div></td></tr>`;
+        return;
+      }
+      tbody.innerHTML = posts.map(p => `
+        <tr>
+          <td><span class="id-chip">#${p.id}</span></td>
+          <td>${p.titulo||p.tituloPostagem||'—'}</td>
+          <td>${p.tipoPostagem ? `<span class="badge badge-type">${p.tipoPostagem}</span>` : '—'}</td>
+          <td style="max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${p.descricaoPostagem||'—'}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="confirmDelete('postagem',${p.id},'Excluir postagem #${p.id}?')">Excluir</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function filterPosts() {
+      const q = document.getElementById('postSearch').value.toLowerCase();
+      renderPosts(allPosts.filter(p => ((p.titulo||p.tituloPostagem)||'').toLowerCase().includes(q)));
+    }
+
+    async function openNovaPostagemModal() {
+      // carrega usuários para o select
+      try {
+        if (!allUsers.length) allUsers = await api('/usuario').catch(()=>[]);
+      } catch(e){}
+      const sel = document.getElementById('postagemUserId');
+      sel.innerHTML = allUsers.length
+        ? allUsers.map(u => `<option value="${u.id}">${u.email || 'ID '+u.id}</option>`).join('')
+        : '<option value="">Nenhum usuário disponível</option>';
+      document.getElementById('postagemTitulo').value = '';
+      document.getElementById('postagemTipo').value = '';
+      document.getElementById('postagemDesc').value = '';
+      openModal('modalNovaPostagem');
+    }
+
+    async function salvarPostagem() {
+      const userId = document.getElementById('postagemUserId').value;
+      const body = {
+        titulo: document.getElementById('postagemTitulo').value.trim(),
+        tipoPostagem: document.getElementById('postagemTipo').value.trim(),
+        descricaoPostagem: document.getElementById('postagemDesc').value.trim()
+      };
+      if (!body.titulo) { showToast('Título obrigatório', 'error'); return; }
+      if (!userId) { showToast('Selecione um usuário', 'error'); return; }
+      try {
+        await api(`/postagens/usuario/${userId}`, { method:'POST', body: JSON.stringify(body) });
+        showToast('Postagem criada!', 'success');
+        closeModal('modalNovaPostagem');
+        loadPosts();
+      } catch(e) { showToast('Erro: ' + e.message, 'error'); }
+    }
+
+    // ── DELETE ────────────────────────────────────────────────
+    function confirmDelete(tipo, id, msg) {
+      document.getElementById('deleteMsg').textContent = msg;
+      document.getElementById('btnConfirmDelete').onclick = () => doDelete(tipo, id);
+      openModal('modalConfirmDelete');
+    }
+
+    async function doDelete(tipo, id) {
+      closeModal('modalConfirmDelete');
+      const path = tipo === 'usuario' ? `/usuario/${id}` : `/postagens/${id}`;
+      try {
+        await api(path, { method:'DELETE' });
+        showToast('Excluído com sucesso', 'success');
+        tipo === 'usuario' ? loadUsers() : loadPosts();
+      } catch(e) { showToast('Erro ao excluir: ' + e.message, 'error'); }
+    }
+
+    // ── MODAL UTILS ───────────────────────────────────────────
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    document.querySelectorAll('.modal-overlay').forEach(o => {
+      o.addEventListener('click', e => { if(e.target === o) o.classList.remove('open'); });
+    });
+
+    // ── TOAST ─────────────────────────────────────────────────
+    function showToast(msg, type='info') {
+      const icons = { success:'✓', error:'✗', info:'ℹ' };
+      const el = document.createElement('div');
+      el.className = `toast toast-${type}`;
+      el.innerHTML = `<span>${icons[type]}</span>${msg}`;
+      document.getElementById('toast-container').appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    // ── INIT ──────────────────────────────────────────────────
+    loadDashboard();
+</script>
+</body>
+</html>
